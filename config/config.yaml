@@ -1,0 +1,16 @@
+
+data:
+  train: "data/TinyStoriesV2-GPT4-train.txt"
+  valid: "data/TinyStoriesV2-GPT4-valid.txt"
+  EOT_token: "<|endoftext|>"
+
+
+tokenization:
+  vocab_size: 4096
+  model_prefix: "data/tokens"
+  tokenized_train: "data/tokenized_train.bin"
+  tokenized_valid: "data/tokenized_valid.bin"
+
+hydra:
+  job:
+    chdir: false

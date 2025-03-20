@@ -1,0 +1,6 @@
+data/
+outputs/
+transformers.egg-info/
+transformers_env/
+.DS_Store
+.idea/
