@@ -115,13 +115,14 @@ class TinyLM:
             # Do a gradient update on the training data
             metrics = self.train_step()
             self.logger.log_metrics(metrics, self.step)
-
+            print(f"Train metrics: {metrics}")
             if self.step % self.eval_interval == 0:
                 validation_metrics = self.validate()
                 self.logger.log_metrics(validation_metrics, self.step)
-
+                print(f"Validation metrics: {validation_metrics}")
                 samples = self.generate_samples()
                 self.logger.log_text_samples(samples, self.step)
+
 
             if self.step % self.checkpoint_interval == 0:
                 self.save_checkpoint()
