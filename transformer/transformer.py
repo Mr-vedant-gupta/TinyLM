@@ -103,7 +103,6 @@ class CausalDecoderTransformer(nn.Module):
         d_embedding = cfg.model.d_embedding
         self.max_new_tokens = cfg.validation.max_new_tokens
         self.chunk_size = cfg.model.chunk_size
-        self.temperature = cfg.model.temperature
         self.embedding = nn.Embedding(cfg.tokenization.vocab_size, d_embedding)
         self.transformer_layers = \
             nn.ModuleList([TransformerLayer(d_embedding, cfg.model.num_heads, cfg.model.d_hidden, cfg.model.dropout_rate)
@@ -124,15 +123,15 @@ class CausalDecoderTransformer(nn.Module):
         return output_logits
 
     @torch.no_grad()
-    def generate_text(self, prompt, is_eos):
+    def generate_text(self, prompt, is_eos, temperature):
             for _ in range(self.max_new_tokens):
                 context = (prompt if prompt.size(1) < self.chunk_size else prompt[:, -self.chunk_size:])
                 logits = self(context)
-                if self.temperature == 0:
+                if temperature == 0:
                     logits = logits[:, -1, :]
                     next_token = torch.argmax(logits).reshape(1, 1)
                 else:
-                    logits = logits[:, -1, :] / self.temperature
+                    logits = logits[:, -1, :] / temperature
                     probs = nn.functional.softmax(logits, dim=-1)
                     next_token = torch.multinomial(probs, num_samples=1).reshape(1, 1)
 

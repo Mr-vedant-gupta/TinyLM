@@ -5,3 +5,4 @@ transformers_env/
 .DS_Store
 .idea/
 __pycache__/
+saved_checkpoints/

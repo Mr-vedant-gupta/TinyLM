@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, render_template, Response
 import json
 import time
+import hydra
+from omegaconf import DictConfig
+from train import TinyLM
 from functools import partial
 import threading
 
@@ -21,12 +24,8 @@ def index():
 def generate_stream(prompt, temperature):
     """Generate text and yield it in chunks to simulate streaming."""
     # First, get the complete generated text
-    complete_text = generate(prompt, temperature)
-
-    # Then stream it chunk by chunk
-    chunks = []
-    total_sent = 0
-
+    complete_text = tiny_lm.generate(prompt, temperature)
+    complete_text = complete_text[len(prompt):]
     # Split by spaces to simulate word-by-word streaming
     words = complete_text.split(' ')
 
@@ -39,7 +38,7 @@ def generate_stream(prompt, temperature):
         yield f"data: {json.dumps({'text': word})}\n\n"
 
         # Short delay to simulate typing
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     # Signal end of stream
     yield f"data: {json.dumps({'done': True})}\n\n"
@@ -49,7 +48,7 @@ def generate_stream(prompt, temperature):
 def generate_text():
     data = request.json
     prompt = data.get('prompt', '')
-    temperature = float(data.get('temperature', 0.7))
+    temperature = float(data.get('temperature', 0))
 
     return Response(
         generate_stream(prompt, temperature),
@@ -57,5 +56,15 @@ def generate_text():
     )
 
 
-if __name__ == '__main__':
+@hydra.main(config_path="../config", config_name="config")
+def main(cfg: DictConfig) -> None:
+    if cfg.train.load_checkpoint == "":
+        raise Exception("No checkpoint provided")
+    global tiny_lm
+    tiny_lm = TinyLM(cfg)
+
     app.run(debug=True)
+
+
+if __name__ == '__main__':
+    main()

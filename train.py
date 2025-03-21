@@ -34,6 +34,7 @@ class TinyLM:
         self.eval_iters = cfg.train.eval_iters
         self.checkpoint_interval = cfg.train.checkpoint_interval
         self.prompts = cfg.validation.prompts
+        self.temperature = cfg.model.temperature
 
         if cfg.train.load_checkpoint is not None:
             print("Loading checkpoint from {} ...".format(cfg.train.load_checkpoint))
@@ -99,16 +100,23 @@ class TinyLM:
         return {"validation_loss": total_loss}
 
     @torch.no_grad()
+    def generate(self, prompt, temperature):
+        tokens = self.tokenizer.encode(prompt, bos=True, eos=False)
+        input_tensor = torch.tensor(tokens).unsqueeze(0).to(device)
+        output_tensor = self.tlm.generate_text(input_tensor, self.tokenizer.is_eos, temperature)
+        output_text = self.tokenizer.decode(output_tensor[0].cpu().numpy().tolist())
+        return output_text
+
+
     def generate_samples(self):
         self.tlm.eval()
         samples = {}
         for prompt_name in self.prompts:
-            tokens = self.tokenizer.encode(prompt_name, bos=True, eos=False)
-            input_tensor = torch.tensor(tokens).unsqueeze(0).to(device)
-            output_tensor = self.tlm.generate_text(input_tensor, self.tokenizer.is_eos)
-            output_text = self.tokenizer.decode(output_tensor[0].cpu().numpy().tolist())
+            output_text =  self.generate(prompt_name, self.temperature)
             samples[prompt_name] = output_text
         return samples
+
+
 
     def train(self):
         while True:
