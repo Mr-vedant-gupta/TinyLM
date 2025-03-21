@@ -29,7 +29,7 @@ class Tokenizer:
         return token == self.eos_id
 
 
-def train_tokenizer(cfg) -> None:
+def train_tokenizer(cfg):
     spm.SentencePieceTrainer.train(
         input=cfg.data.train,
         model_prefix=cfg.tokenization.model_prefix,
@@ -57,7 +57,7 @@ def tokenize_data(cfg):
         tokenized_datapoints = []
         for datapoint in datapoints:
             tokenized_datapoint = tokenizer.encode(datapoint.strip(), bos=True, eos=True)
-            tokenized_datapoints.append(tokenized_datapoint)
+            tokenized_datapoints.extend(tokenized_datapoint)
 
         tokenized_datapoints = np.array(tokenized_datapoints, dtype=np.uint16)
         with open(out, "wb") as f:
@@ -68,7 +68,7 @@ def tokenize_data(cfg):
 
 
 @hydra.main(config_path="../config", config_name="config")
-def main(cfg: DictConfig) -> None:
+def main(cfg: DictConfig):
     if not os.path.exists(cfg.data.train):
         raise FileNotFoundError(f"Training data not found at {cfg.data.train}")
     if not os.path.exists(cfg.data.valid):

@@ -3,6 +3,7 @@ data:
   train: "data/TinyStoriesV2-GPT4-train.txt"
   valid: "data/TinyStoriesV2-GPT4-valid.txt"
   EOT_token: "<|endoftext|>"
+  checkpoint_dir: "saved_checkpoints"
 
 
 tokenization:
@@ -11,6 +12,44 @@ tokenization:
   tokenized_train: "data/tokenized_train.bin"
   tokenized_valid: "data/tokenized_valid.bin"
 
+train:
+  seed: 42
+  debug: True # Do history repetition instead of next token prediction as a sanity check
+  learning_rate: 6e-4
+  weight_decay: 1e-1
+  beta1: 0.9
+  beta2: 0.95
+  gradient_accumulation_steps:  4
+  grad_clip: 1.0
+  batch_size: 64
+  load_checkpoint: null
+  eval_interval: 150
+  eval_iters: 200
+  checkpoint_interval: 500
+
+
+
+validation:
+  prompts:
+    - "Once upon a time there was a little girl named Lucy"
+  max_new_tokens: 256
+
+model:
+  chunk_size: 512 # Number of tokens in a trajectory
+  d_embedding: 512
+  num_heads: 8
+  d_hidden: 1634
+  dropout_rate: 0.2
+  num_layers: 8
+  temperature: 0
+
+WandB:
+  project: tiny-LM
+  name: ""
+
 hydra:
   job:
     chdir: false
+
+
+

@@ -98,14 +98,19 @@ class TransformerLayer(nn.Module):
 
 
 class CausalDecoderTransformer(nn.Module):
-    CHECKME
-    def __init__(self, d_embedding, num_heads, d_hidden, dropout_rate, num_layers, vocab_size, max_sequence_len):
+    def __init__(self, cfg):
         super(CausalDecoderTransformer, self).__init__()
-        self.embedding = nn.Embedding(vocab_size, d_embedding)
-        self.transformer_layers = [TransformerLayer(d_embedding, num_heads, d_hidden, dropout_rate) for _ in range(num_layers)]
-        self.positional_encoder = SinusoidalPositionalEncoding(d_embedding, max_sequence_len)
-        self.output_logit_layer = nn.Linear(d_embedding, vocab_size)
-        self.dropout = nn.Dropout(dropout_rate)
+        d_embedding = cfg.model.d_embedding
+        self.max_new_tokens = cfg.validation.max_new_tokens
+        self.chunk_size = cfg.model.chunk_size
+        self.temperature = cfg.model.temperature
+        self.embedding = nn.Embedding(cfg.tokenization.vocab_size, d_embedding)
+        self.transformer_layers = \
+            [TransformerLayer(d_embedding, cfg.model.num_heads, cfg.model.d_hidden, cfg.model.dropout_rate)
+                for _ in range(cfg.model.num_layers)]
+        self.positional_encoder = SinusoidalPositionalEncoding(d_embedding, self.chunk_size)
+        self.output_logit_layer = nn.Linear(d_embedding, cfg.tokenization.vocab_size)
+        self.dropout = nn.Dropout(cfg.model.dropout_rate)
 
     def generate_causal_mask(self, size):
         return torch.tril(torch.ones(size, size))
@@ -118,12 +123,31 @@ class CausalDecoderTransformer(nn.Module):
         output_logits = self.output_logit_layer(embeddings)
         return output_logits
 
+    @torch.no_grad()
+    def generate_text(self, prompt, is_eos):
+            for _ in range(self.max_new_tokens):
+                context = (prompt if prompt.size(1) < self.chunk_size else prompt[:, -self.chunk_size:])
+                logits = self(context)
+                if self.temperature == 0:
+                    logits = logits[:, -1, :]
+                    next_token = torch.argmax(logits)
+                else:
+                    logits = logits[:, -1, :] / self.temperature
+                    probs = nn.functional.softmax(logits, dim=-1)
+                    next_token = torch.multinomial(probs, num_samples=1)
+
+                if is_eos(next_token):
+                    break
+                prompt = torch.cat([prompt, next_token], dim=-1)
+            return prompt
 
 
 
 
 
-        
+
+
+
 
 
 
