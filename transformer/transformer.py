@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import math
-import copy
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class SinusoidalPositionalEncoding(nn.Module):
     def __init__(self, d_embedding, max_sequence_length):
@@ -106,14 +106,14 @@ class CausalDecoderTransformer(nn.Module):
         self.temperature = cfg.model.temperature
         self.embedding = nn.Embedding(cfg.tokenization.vocab_size, d_embedding)
         self.transformer_layers = \
-            [TransformerLayer(d_embedding, cfg.model.num_heads, cfg.model.d_hidden, cfg.model.dropout_rate)
-                for _ in range(cfg.model.num_layers)]
+            nn.ModuleList([TransformerLayer(d_embedding, cfg.model.num_heads, cfg.model.d_hidden, cfg.model.dropout_rate)
+                for _ in range(cfg.model.num_layers)])
         self.positional_encoder = SinusoidalPositionalEncoding(d_embedding, self.chunk_size)
         self.output_logit_layer = nn.Linear(d_embedding, cfg.tokenization.vocab_size)
         self.dropout = nn.Dropout(cfg.model.dropout_rate)
 
     def generate_causal_mask(self, size):
-        return torch.tril(torch.ones(size, size))
+        return torch.tril(torch.ones(size, size)).to(device)
 
     def forward(self, sequence):
         embeddings = self.dropout(self.positional_encoder(self.embedding(sequence)))
@@ -130,13 +130,13 @@ class CausalDecoderTransformer(nn.Module):
                 logits = self(context)
                 if self.temperature == 0:
                     logits = logits[:, -1, :]
-                    next_token = torch.argmax(logits)
+                    next_token = torch.argmax(logits).reshape(1, 1)
                 else:
                     logits = logits[:, -1, :] / self.temperature
                     probs = nn.functional.softmax(logits, dim=-1)
-                    next_token = torch.multinomial(probs, num_samples=1)
+                    next_token = torch.multinomial(probs, num_samples=1).reshape(1, 1)
 
-                if is_eos(next_token):
+                if is_eos(next_token.item()):
                     break
                 prompt = torch.cat([prompt, next_token], dim=-1)
             return prompt

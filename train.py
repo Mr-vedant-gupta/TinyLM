@@ -47,8 +47,8 @@ class TinyLM:
     def load_checkpoint(self, checkpoint_path):
         if not os.path.exists(checkpoint_path):
             raise Exception("No checkpoint found at {}".format(checkpoint_path))
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        self.tlm.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.step = checkpoint['step']
 
@@ -61,7 +61,7 @@ class TinyLM:
         torch.save(save_dict, save_path)
 
     def calculate_model_size(self, cfg):
-        cfg["number_parameters"] = sum([p.numel() for p in self.tlm.parameters() if p.requires_grad])
+        cfg.model.number_parameters = sum([p.numel() for p in self.tlm.parameters() if p.requires_grad])
 
     def train_step(self):
         self.tlm.train()
@@ -71,7 +71,7 @@ class TinyLM:
             inp, targ, epoch = next(self.train_dataloader)
             inp, targ = inp.to(device), targ.to(device)
             logits = self.tlm(inp)
-            loss = self.loss_fn(logits.reshape(-1, logits.shape[-1], targ.reshape(-1)))
+            loss = self.loss_fn(logits.reshape(-1, logits.shape[-1]), targ.reshape(-1))
             loss = loss / self.gradient_accumulation_steps
             loss.backward()
             total_loss += loss.item()
@@ -82,7 +82,7 @@ class TinyLM:
             torch.nn.utils.clip_grad_norm_(self.tlm.parameters(), self.grad_clip)
 
         self.optimizer.step()
-
+        self.optimizer.zero_grad()
         return {"epoch": epoch, "loss": total_loss, "grad_clipped": grad_clipped}
 
     @torch.no_grad()
@@ -93,7 +93,7 @@ class TinyLM:
             inp, targ, _ = next(self.valid_dataloader)
             inp, targ = inp.to(device), targ.to(device)
             logits = self.tlm(inp)
-            loss = self.loss_fn(logits.reshape(-1, logits.shape[-1], targ.reshape(-1)))
+            loss = self.loss_fn(logits.reshape(-1, logits.shape[-1]), targ.reshape(-1))
             total_loss += loss.item() / self.eval_iters
 
         return {"validation_loss": total_loss}
@@ -103,15 +103,12 @@ class TinyLM:
         self.tlm.eval()
         samples = {}
         for prompt_name in self.prompts:
-            prompt_text = self.prompts[prompt_name]
-            tokens = self.tokenizer.encode(prompt_text, bos=True, eos=False)
+            tokens = self.tokenizer.encode(prompt_name, bos=True, eos=False)
             input_tensor = torch.tensor(tokens).unsqueeze(0).to(device)
             output_tensor = self.tlm.generate_text(input_tensor, self.tokenizer.is_eos)
             output_text = self.tokenizer.decode(output_tensor[0].cpu().numpy().tolist())
             samples[prompt_name] = output_text
         return samples
-
-
 
     def train(self):
         while True:
@@ -125,6 +122,7 @@ class TinyLM:
 
                 samples = self.generate_samples()
                 self.logger.log_text_samples(samples, self.step)
+
             if self.step % self.checkpoint_interval == 0:
                 self.save_checkpoint()
 

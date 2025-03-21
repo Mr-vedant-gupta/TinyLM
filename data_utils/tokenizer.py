@@ -1,8 +1,10 @@
 import os
 import numpy as np
 import sentencepiece as spm
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 import hydra
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from tqdm import tqdm
 
 
 class Tokenizer:
@@ -47,6 +49,24 @@ def train_tokenizer(cfg):
     )
 
 
+def split_datapoints_into_chunks(datapoints, num_chunks = 50):
+    chunk_size = len(datapoints) // num_chunks
+    chunks = []
+    for i in range(num_chunks):
+        start = i * chunk_size
+        end = None if i == num_chunks - 1 else (i + 1) * chunk_size
+        chunks.append(datapoints[start:end])
+    return chunks
+
+def process_chunk(datapoints_chunk, cfg):
+    tokenizer = Tokenizer(cfg)
+    tokenized_chunk = []
+    for datapoint in datapoints_chunk:
+        # Remove any extra whitespace and encode with BOS and EOS markers
+        tokens = tokenizer.encode(datapoint.strip(), bos=True, eos=True)
+        tokenized_chunk.extend(tokens)
+    return tokenized_chunk
+
 def tokenize_data(cfg):
     tokenizer = Tokenizer(cfg)
 
@@ -55,9 +75,15 @@ def tokenize_data(cfg):
             data = f.read()
             datapoints = data.split(cfg.data.EOT_token)
         tokenized_datapoints = []
-        for datapoint in datapoints:
-            tokenized_datapoint = tokenizer.encode(datapoint.strip(), bos=True, eos=True)
-            tokenized_datapoints.extend(tokenized_datapoint)
+        print("Chunking datapoints...")
+        chunks = split_datapoints_into_chunks(datapoints)
+        print("Done splitting into chunks")
+        with ProcessPoolExecutor() as executor:
+            futures = [executor.submit(process_chunk, chunk, cfg) for chunk in chunks]
+
+            # Optionally, use tqdm to show a progress bar.
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Tokenizing"):
+                tokenized_datapoints.extend(future.result())
 
         tokenized_datapoints = np.array(tokenized_datapoints, dtype=np.uint16)
         with open(out, "wb") as f:
@@ -74,7 +100,7 @@ def main(cfg: DictConfig):
     if not os.path.exists(cfg.data.valid):
         raise FileNotFoundError(f"Validation data not found at {cfg.data.valid}")
     # Train the tokenizer
-    train_tokenizer(cfg)
+    #train_tokenizer(cfg)
     # Tokenize the training data
     tokenize_data(cfg)
 

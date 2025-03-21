@@ -1,6 +1,5 @@
 import torch
-from torch.utils.data import IterableDataset, DataLoader
-import random
+from torch.utils.data import IterableDataset
 import numpy as np
 
 
@@ -13,27 +12,27 @@ class TLMDataset(IterableDataset):
         self.num_chunks = len(data) // self.chunk_size
         self.debug = cfg.train.debug
 
-        def __iter__(self):
-            data = np.memmap(self.dataset_path, dtype=np.uint16, mode="r")
-            indices = np.arange(self.num_chunks)
-            np.random.shuffle(indices)
-            for i in indices:
-                chunk = torch.from_numpy(data[i * self.chunk_size:(i + 1) * self.chunk_size].astype(np.int64))
-                if self.debug:
-                    inp = chunk
-                    half_chunk = chunk[:self.chunk_size // 2]
-                    targ = torch.cat((half_chunk, half_chunk))
-                else:
-                    inp = chunk[:-1]
-                    targ = chunk[1:]
-                yield [inp, targ]
+    def __iter__(self):
+        data = np.memmap(self.dataset_path, dtype=np.uint16, mode="r")
+        indices = np.arange(self.num_chunks)
+        np.random.shuffle(indices)
+        for i in indices:
+            chunk = torch.from_numpy(data[i * self.chunk_size:(i + 1) * self.chunk_size].astype(np.int64))
+            if self.debug:
+                inp = chunk
+                half_chunk = chunk[:self.chunk_size // 2]
+                targ = torch.cat((half_chunk, half_chunk))
+            else:
+                inp = chunk[:-1]
+                targ = chunk[1:]
+            yield [inp, targ]
 
 
 def create_infinite_dataloader(dataloader):
     epoch = 0
     while True:
         for batch in dataloader:
-            yield batch.append(epoch)
+            yield batch + [epoch]
         epoch += 1
 
 

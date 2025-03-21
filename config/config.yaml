@@ -42,6 +42,7 @@ model:
   dropout_rate: 0.2
   num_layers: 8
   temperature: 0
+  number_parameters: 0 # Will be set by the training script
 
 WandB:
   project: tiny-LM
