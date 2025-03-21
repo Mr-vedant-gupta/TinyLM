@@ -100,7 +100,7 @@ def main(cfg: DictConfig):
     if not os.path.exists(cfg.data.valid):
         raise FileNotFoundError(f"Validation data not found at {cfg.data.valid}")
     # Train the tokenizer
-    #train_tokenizer(cfg)
+    train_tokenizer(cfg)
     # Tokenize the training data
     tokenize_data(cfg)
 

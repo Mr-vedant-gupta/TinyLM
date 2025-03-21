@@ -40,7 +40,6 @@ torch==2.2.2
 torchaudio==2.2.2
 torchvision==0.17.2
 tqdm==4.67.1
--e git+https://github.com/Mr-vedant-gupta/transformers.git@6118108b5e1a5bf70f8112c3d7cd4bc3d77b21ed#egg=transformers
 typing_extensions==4.12.2
 urllib3==2.3.0
 wandb==0.19.8

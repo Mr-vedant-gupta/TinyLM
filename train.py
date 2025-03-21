@@ -83,7 +83,7 @@ class TinyLM:
 
         self.optimizer.step()
         self.optimizer.zero_grad()
-        return {"epoch": epoch, "loss": total_loss, "grad_clipped": grad_clipped}
+        return {"epoch": epoch, "loss": total_loss, "grad_clipped": int(grad_clipped)}
 
     @torch.no_grad()
     def validate(self):
