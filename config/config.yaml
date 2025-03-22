@@ -1,55 +1,90 @@
-
+# Data configuration
 data:
+  # Paths to training and validation datasets
   train: "data/TinyStoriesV2-GPT4-train.txt"
   valid: "data/TinyStoriesV2-GPT4-valid.txt"
+  # Special token marking the end a single sample in training/validation text files
   EOT_token: "<|endoftext|>"
+  # Directory to save model checkpoints
   checkpoint_dir: "saved_checkpoints"
 
 
+# Tokenizer configuration
 tokenization:
+  # Size of the vocabulary (number of unique tokens)
   vocab_size: 4096
+  # Prefix for tokenizer model files
   model_prefix: "data/tokens"
+  # Paths to tokenized datasets
   tokenized_train: "data/tokenized_train.bin"
   tokenized_valid: "data/tokenized_valid.bin"
 
+# Training configuration
 train:
+  # Random seed for reproducibility
   seed: 42
-  debug: True # Do history repetition instead of next token prediction as a sanity check
+  # Debug mode: repeat history instead of next token prediction - used to sanity check the training script
+  debug: True
+  # Learning rate for AdamW optimizer
   learning_rate: 6e-4
+  # Weight decay for L2 regularization
   weight_decay: 1e-1
+  # Adam optimizer parameters
   beta1: 0.9
   beta2: 0.95
-  gradient_accumulation_steps:  4
+  # Number of steps to accumulate gradients before updating
+  gradient_accumulation_steps: 4
+  # Maximum gradient norm for gradient clipping
   grad_clip: 1.0
+  # Number of samples per batch
   batch_size: 64
+  # Path to checkpoint to load (null for training from scratch)
   load_checkpoint: null
+  # Evaluate model every N steps
   eval_interval: 150
+  # Number of iterations to run during evaluation
   eval_iters: 200
+  # Save checkpoint every N steps
   checkpoint_interval: 500
 
-
-
+# Validation configuration
 validation:
+  # Test prompts for text generation
   prompts:
     - "Once upon a time there was a little girl named Lucy"
+  # Maximum number of tokens to generate
   max_new_tokens: 256
 
+# Model architecture configuration
 model:
-  chunk_size: 512 # Number of tokens in a trajectory
+  # Maximum sequence length (context window)
+  chunk_size: 512
+  # Embedding dimension
   d_embedding: 512
+  # Number of attention heads
   num_heads: 8
+  # Hidden dimension in feed-forward networks
   d_hidden: 1634
+  # Dropout probability
   dropout_rate: 0.2
+  # Number of transformer layers
   num_layers: 8
+  # Temperature for text generation (0 for greedy decoding)
   temperature: 0
-  number_parameters: 0 # Will be set by the training script
+  # Total number of model parameters (set by training script)
+  number_parameters: 0
 
+# Weights & Biases logging configuration
 WandB:
+  # Project name for experiment tracking
   project: tiny-LM
+  # Run name (needs to be provided as a command line argument)
   name: ""
 
+# Hydra configuration
 hydra:
   job:
+    # Whether to change working directory
     chdir: false
 
 
