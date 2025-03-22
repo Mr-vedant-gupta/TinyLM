@@ -11,17 +11,21 @@ Below is a sample generation after ~10 hours of training on a single Quadro RTX 
 
 **Output**:
 ```
-Once upon a time there was a little girl named Lucy. She was three years old and loved to explore. One day, she went to the park with her mom.
+Once upon a time there was a little girl named Lucy. She was three years old and loved to explore the world around her. One day, Lucy was walking in the park when she saw a big, red ball. She wanted to play with it, so she ran over to it.
 
-At the park, Lucy saw a big tree with lots of leaves. She wanted to climb it, so she asked her mom if she could. Her mom said yes and Lucy started to climb.
+"What is this?" Lucy asked.
 
-As she climbed higher and higher, she noticed something strange. It was a big, round, green caterpillar! Lucy was so excited and wanted to pick it up.
+"It's a ball," said a friendly voice.\nLucy looked around and saw a little boy. He was wearing a blue shirt and had a big smile on his face.
 
-She reached out and grabbed the caterpillar. But then, the caterpillar started to move! Lucy was so surprised and started to cry.
+"Can I play with you?" Lucy asked.\nThe little boy nodded and they started to play together. They had so much fun that they didn't notice the time passing by. Suddenly, the ball started to roll away. Lucy and the little boy ran after it, but it was too fast.
 
-Her mom came over and said, "Don't worry, Lucy. I'll help you." She took the caterpillar home and put it in a jar.
+"Let's catch it!" Lucy said.
 
-Lucy was so happy to have a new friend. She hugged her mom and said, "Thank you for helping me!"
+They ran and ran until they finally caught the ball.
+
+"That was so much fun!" said the little boy.
+
+"Yes, it was!" said Lucy.\nThey both smiled and hugged each other. Then they went back to playing with the ball, happy to have made a new friend.
 ```
 
 A sample checkpoint can be found in `saved_checkpoints` and a file showing the progression of text generation capabilities during training can be found in `data/`.
