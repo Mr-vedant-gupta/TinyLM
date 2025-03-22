@@ -25,8 +25,7 @@ class TinyLM:
 
         # Add number of params to the cfg
         self.calculate_model_size(cfg)
-
-        self.logger = WandBLogger(cfg, self.tlm)
+        self.cfg = cfg
         self.train_dataloader, self.valid_dataloader = create_dataloaders(cfg)
         self.gradient_accumulation_steps = cfg.train.gradient_accumulation_steps
         self.grad_clip = cfg.train.grad_clip
@@ -101,6 +100,7 @@ class TinyLM:
 
     @torch.no_grad()
     def generate(self, prompt, temperature):
+        self.tlm.eval()
         tokens = self.tokenizer.encode(prompt, bos=True, eos=False)
         input_tensor = torch.tensor(tokens).unsqueeze(0).to(device)
         output_tensor = self.tlm.generate_text(input_tensor, self.tokenizer.is_eos, temperature)
@@ -119,6 +119,7 @@ class TinyLM:
 
 
     def train(self):
+        self.logger = WandBLogger(self.cfg, self.tlm)
         while True:
             # Do a gradient update on the training data
             metrics = self.train_step()
