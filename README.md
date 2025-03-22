@@ -24,7 +24,7 @@ Her mom came over and said, "Don't worry, Lucy. I'll help you." She took the cat
 Lucy was so happy to have a new friend. She hugged her mom and said, "Thank you for helping me!"
 ```
 
-A file showing the progression of text generation capabilities during training can be found in `data/`.
+A sample checkpoint can be found in `saved_checkpoints` and a file showing the progression of text generation capabilities during training can be found in `data/`.
 
 ## Project Structure
 
@@ -86,6 +86,6 @@ The training script uses Hydra for configuration management. Training parameters
 
 Launch the web interface to interact with a trained model:
 ```bash
-python tiny_ui/app.py train.load_checkpoint=<path_to_checkpoint> WandB.name=dummy
+python tiny_ui/app.py train.load_checkpoint=saved_checkpoints/sample_checkpoint.pt WandB.name=dummy
 ```
 
